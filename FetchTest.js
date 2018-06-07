@@ -11,7 +11,7 @@ import {
     Image,
 } from 'react-native'
 import NavigationBar from './NavigationBar'
-
+import HttpUtils from './HttpUtils'
 export default class FetchTest extends Component {
     constructor(props) {
         super(props)
@@ -21,13 +21,27 @@ export default class FetchTest extends Component {
     }
 
     onLoad(url) {
-        fetch(url)
-            .then(response => response.json)
-            .then(result => {
-                    this.setState({
-                        result: JSON.stringify(result)
-                    })
+        // fetch(url)
+        //     .then(response => response.json())
+        //     .then(result => {
+        //             this.setState({
+        //                 result: JSON.stringify(result)
+        //             })
+        //         })
+        //     .catch(error=>{
+        //         this.setState({
+        //             result:JSON.stringify(error)
+        //         })
+        //     })
+        //Network Request Failed 解决方案,ios9 只允许 https 不允许 http
+        // https://segmentfault.com/a/1190000002933776
+        HttpUtils.get(url)
+            .then(result=>{
+                console.log(result)
+                this.setState({
+                    result:JSON.stringify(result)
                 })
+            })
             .catch(error=>{
                 this.setState({
                     result:JSON.stringify(error)
@@ -36,23 +50,34 @@ export default class FetchTest extends Component {
     }
 
     onSubmit(url,data) {
-        fetch(url,{
-            method:'POST',
-            header:{
-                'Accept':'application/json',
-                'Content-Type':'application/json',
-            },
-            body:JSON.stringify(data)
-        })
-            .then(response => response.json)
-            .then(result => {
-                console.log(result)
-                    this.setState({
-                        result: JSON.stringify(result)
-                    })
+        // fetch(url,{
+        //     method:'POST',
+        //     header:{
+        //         'Accept':'application/json',
+        //         'Content-Type':'application/json',
+        //     },
+        //     body:JSON.stringify(data)
+        // })
+        //     .then(response => response.json)
+        //     .then(result => {
+        //         console.log(result)
+        //             this.setState({
+        //                 result: JSON.stringify(result)
+        //             })
+        //         })
+        //     .catch(error=>{
+        //         console.log(error)
+        //         this.setState({
+        //             result:JSON.stringify(error)
+        //         })
+        //     })
+        HttpUtils.post(url,data)
+            .then(result=>{
+                this.setState({
+                    result:JSON.stringify(result)
                 })
+            })
             .catch(error=>{
-                console.log(error)
                 this.setState({
                     result:JSON.stringify(error)
                 })
