@@ -10,8 +10,9 @@ import {
     StyleSheet,
     Text,
     Image,
-    View
+    View,
     // Navigator,
+    ListView
 } from 'react-native';
 
 //Navigator  from 'react-native'
@@ -24,6 +25,7 @@ import {Navigator} from 'react-native-deprecated-custom-components'
 
 import TabNavigator from 'react-native-tab-navigator';
 import Boy from './Boy'
+import ListViewTest from './ListViewTest'
 
 
 export default class myApp extends Component {
@@ -82,15 +84,16 @@ export default class myApp extends Component {
                 {/*<View style={{backgroundColor: 'blue', flex: 1}}></View>*/}
                 {/*</TabNavigator.Item>*/}
                 {/*</TabNavigator>}*/}
-                <Navigator
-                    initialRoute={{
-                        component: Boy,
-                    }}
-                    renderScene={(route, navigator) => {
-                        let Component = route.component;
-                        return <Component navigator={navigator} {...route.params}/>;
-                    }}
-                />
+                {/*<Navigator*/}
+                {/*initialRoute={{*/}
+                {/*component: Boy,*/}
+                {/*}}*/}
+                {/*renderScene={(route, navigator) => {*/}
+                {/*let Component = route.component;*/}
+                {/*return <Component navigator={navigator} {...route.params}/>;*/}
+                {/*}}*/}
+                {/*/>*/}
+                <ListViewTest/>
             </View>
         );
     }
