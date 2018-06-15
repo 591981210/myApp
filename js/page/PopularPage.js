@@ -76,6 +76,7 @@ class PopularTab extends Component {
         this.dataRepository = new DataRepository();
         this.state = {
             dataSource: new ListView.DataSource({rowHasChanged: (r1, r2)=>r1 !== r2}),
+            isLoading:false
         }
     }
 
