@@ -41,7 +41,6 @@ export default class MyPage extends Component {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-
     },
     tips: {
         fontSize: 29

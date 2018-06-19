@@ -10,7 +10,8 @@ import {
     Text,
     ScrollView,
     TouchableOpacity,
-    Image
+    Image,
+    Alert
 } from 'react-native'
 import CheckBox from 'react-native-check-box'
 
@@ -29,15 +30,13 @@ export default class CustomKeyPage extends Component {
         }
     }
 
-    componentDidMount(){
+    componentDidMount() {
         this.loadData()
     }
 
     loadData() {
         this.languageDao.fetch()
             .then(res => {
-                console.log(1111)
-                console.log(res)
                 this.setState({
                     dataArray: res
                 })
@@ -48,16 +47,43 @@ export default class CustomKeyPage extends Component {
     }
 
     onSave() {
+        if (this.changeValues.length === 0) {
+            this.props.navigator.pop()
+            return;
+        }
+        //存入storage 缓存中
+        this.languageDao.save(this.state.dataArray)
         this.props.navigator.pop()
     }
 
     onBack() {
-        this.props.navigator.pop()
+        if (this.changeValues.length === 0) {
+            this.props.navigator.pop()
+            return
+        }
+        Alert.alert(
+            '提示',
+            '要保存修改吗?',
+            [
+                {
+                    text: '不保存',
+                    onPress: () => {
+                        this.props.navigator.pop()
+                    },
+                    style: 'cancel'
+                },
+                {
+                    text: '保存',
+                    onPress: () => {
+                         this.onSave()
+                    }
+                },
+            ]
+        )
     }
 
     renderView() {
-        console.log(12222)
-        if (!this.state.dataArray || this.state.dataArray.length === 0)return;
+        if (!this.state.dataArray || this.state.dataArray.length === 0) return;
         var len = this.state.dataArray.length;
         var views = [];
         for (var i = 0, l = len - 2; i < l; i += 2) {
@@ -71,6 +97,7 @@ export default class CustomKeyPage extends Component {
                 </View>
             )
         }
+        //最后一个,单行或无
         views.push(
             <View key={len - 1}>
                 <View style={styles.item}>
@@ -82,9 +109,9 @@ export default class CustomKeyPage extends Component {
         return views;
     }
 
-    onClick(data){
+    onClick(data) {
         data.checked = !data.checked
-        ArrayUtils.updateArray(this.changeValues,data)
+        ArrayUtils.updateArray(this.changeValues, data)
     }
 
     renderCheckBox(data) {
@@ -92,8 +119,9 @@ export default class CustomKeyPage extends Component {
         return (
             <CheckBox
                 style={{flex: 1, padding: 10}}
-                onClick={()=>this.onClick(data)}
+                onClick={() => this.onClick(data)}
                 leftText={leftText}
+                isChecked={data.checked}
                 checkedImage={<Image source={require('../../page/my/img/ic_check_box.png')}
                                      style={{tintColor: '#2196F3'}}/>}
                 unCheckedImage={<Image source={require('../../page/my/img/ic_check_box_outline_blank.png')}
@@ -112,11 +140,11 @@ export default class CustomKeyPage extends Component {
         return (
             <View style={styles.container}>
                 <NavigationBar
-                    title='自定义标签'
+                    title='我的自定义标签'
                     style={{backgroundColor: '#6495ED'}}
                     leftButton={ViewUtils.getLeftButton(() => this.onBack())}
                     rightButton={rightButton}
-                    />
+                />
                 <ScrollView>
                     {this.renderView()}
                 </ScrollView>
@@ -137,12 +165,12 @@ const styles = StyleSheet.create({
         fontSize: 20,
         color: 'white'
     },
-    line:{
-        height:1,
-        backgroundColor:'black'
+    line: {
+        height: 1,
+        backgroundColor: 'black'
     },
-    item:{
-        flexDirection:'row',
-        alignItems:'center'
+    item: {
+        flexDirection: 'row',
+        alignItems: 'center'
     }
 })

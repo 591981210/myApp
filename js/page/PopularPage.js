@@ -14,6 +14,7 @@ import {
 import NavigationBar from '../common/NavigationBar';
 import DataRepository from '../expand/dao/DataRepository';
 import RepositoryCell from '../common/RepositoryCell'
+import LanguageDao,{FLAG_LANGUAGE} from '../expand/dao/LanguageDao'
 import ScrollableTableView,{ScrollableTabBar} from 'react-native-scrollable-tab-view'
 
 const URL = 'https://api.github.com/search/repositories?q=';
@@ -21,35 +22,40 @@ const QUERY_STR = '&sort=stars';
 export default class PopularPage extends Component {
     constructor(props) {
         super(props);
-        this.dataRepository = new DataRepository();
+        this.languageDao =  new LanguageDao(FLAG_LANGUAGE.flag_key)
         this.state = {
-            result: ''
+            languages:[]
         }
     }
 
+    componentDidMount(){
+        this.loadData()
+    }
 
-    onLoad() {
-        let url = this.genUrl(this.text)
-        this.dataRepository.fetchNetRepository(url)
+    loadData() {
+        this.languageDao.fetch()
             .then(res => {
                 this.setState({
-                    result: JSON.stringify(res)
+                    languages: res
                 })
             })
             .catch(error => {
                 console.log(error)
-                this.setState({
-                    result: JSON.stringify(error)
-                })
             })
     }
 
-    genUrl(key) {
-        console.log(URL + key + QUERY_STR)
-        return URL + key + QUERY_STR
-    }
 
     render() {
+        let content = this.state.languages.length>0?
+            <ScrollableTableView
+                renderTabBar={()=><ScrollableTabBar/>}
+            >
+                {this.state.languages.map((result,i,arr)=>{
+                    let lan = arr[i]
+                    return lan.checked?
+                        <PopularTab key={i} tabLabel={lan.name}></PopularTab>:null
+                })}
+            </ScrollableTableView>:null
         return (
             <View style={styles.container}>
                 <NavigationBar
@@ -58,14 +64,7 @@ export default class PopularPage extends Component {
                         backgroundColor: '#2196F3'
                     }}
                 />
-                <ScrollableTableView
-                    renderTabBar={()=><ScrollableTabBar/>}
-                >
-                    <PopularTab tabLabel="java"></PopularTab>
-                    <PopularTab tabLabel="ios"></PopularTab>
-                    <PopularTab tabLabel="Android"></PopularTab>
-                    <PopularTab tabLabel="javaScript"></PopularTab>
-                </ScrollableTableView>
+                {content}
             </View>
         )
     }

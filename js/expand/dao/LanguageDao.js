@@ -23,6 +23,7 @@ export default class LanguageDao{
                     reject(error);
                     return;
                 }
+                //如果为空,默认值
                 if (!result){
                     var data=this.flag===FLAG_LANGUAGE.flag_language? langsData:keysData;
                     this.save(data);
