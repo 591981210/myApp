@@ -22,16 +22,20 @@ import ViewUtils from '../../util/ViewUtils'
 export default class SortKeyPage extends Component {
     constructor(props) {
         super(props);
+        //原始数组
         this.dataArray = [];
+        //排序后数组
         this.sortResultArray = [];
+        //备份筛选出选择的数组
         this.originalCheckedArray = [];
         this.state = {
+            //筛选出选择的数组
             checkedArray: []
         }
     }
 
     componentDidMount() {
-        this.languageDao = new LanguageDao(this.props.flag);
+        this.languageDao = new LanguageDao(FLAG_LANGUAGE.flag_key);
         this.loadData();
     }
 
@@ -67,6 +71,7 @@ export default class SortKeyPage extends Component {
 
     onSave(haChecked) {
         if (!haChecked) {
+            //比较是否一样
             if (ArrayUtils.isEqual(this.originalCheckedArray, this.state.checkedArray)) {
                 this.props.navigator.pop();
                 return;
@@ -129,6 +134,7 @@ class SortCell extends Component {
     render() {
         return <TouchableHighlight
             underlayColor={'#eee'}
+            delayLongPress={500}
             style={this.props.data.checked ? styles.item : styles.hidden}
             {...this.props.sortHandlers}>
             <View style={{marginLeft: 10, flexDirection: 'row'}}>

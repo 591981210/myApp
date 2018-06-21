@@ -25,6 +25,7 @@ export default class CustomKeyPage extends Component {
         super(props);
         this.languageDao = new LanguageDao(FLAG_LANGUAGE.flag_key)
         this.changeValues = []
+        this.isRemoveKey = this.props.isRemoveKey?true:false;
         this.state = {
             dataArray: [],
         }
@@ -50,6 +51,11 @@ export default class CustomKeyPage extends Component {
         if (this.changeValues.length === 0) {
             this.props.navigator.pop()
             return;
+        }
+        if(this.isRemoveKey) {
+            this.changeValues.forEach(res => {
+                ArrayUtils.remove(this.state.dataArray, res)
+            })
         }
         //存入storage 缓存中
         this.languageDao.save(this.state.dataArray)
@@ -130,21 +136,17 @@ export default class CustomKeyPage extends Component {
     }
 
     render() {
-        let rightButton = <TouchableOpacity
-            onPress={() => this.onSave()}
-        >
-            <View style={{margin: 10}}>
-                <Text style={styles.title}>保存</Text>
-            </View>
-        </TouchableOpacity>
+        let title = this.isRemoveKey ?'标签移除':'自定义标签';
+        let rightButtonTitle=this.isRemoveKey? '移除':'保存';
+
+        let navigationBar = <NavigationBar
+            title={title}
+            style={{backgroundColor: '#2196F3'}}
+            leftButton={ViewUtils.getLeftButton(() => this.onBack())}
+            rightButton={ViewUtils.getRightButton(rightButtonTitle,()=>this.onSave())}/>
         return (
             <View style={styles.container}>
-                <NavigationBar
-                    title='我的自定义标签'
-                    style={{backgroundColor: '#6495ED'}}
-                    leftButton={ViewUtils.getLeftButton(() => this.onBack())}
-                    rightButton={rightButton}
-                />
+                {navigationBar}
                 <ScrollView>
                     {this.renderView()}
                 </ScrollView>
