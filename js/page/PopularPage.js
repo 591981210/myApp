@@ -9,7 +9,8 @@ import {
     Text,
     TextInput,
     ListView,
-    RefreshControl
+    RefreshControl,
+    DeviceEventEmitter
 } from 'react-native'
 import NavigationBar from '../common/NavigationBar';
 import DataRepository from '../expand/dao/DataRepository';
@@ -88,13 +89,27 @@ class PopularTab extends Component {
             isLoading: true
         })
         let url=this.genFetchUrl(this.props.tabLabel);
+
+        //先读缓存,再读接口
         this.dataRepository
-            .fetchNetRepository(url)
+            .fetchRepository(url)
             .then(result=> {
+                let items = result && result.items?result.items:result?result:[]
                 this.setState({
                     isLoading: false,
-                    dataSource:this.state.dataSource.cloneWithRows(result.items)
+                    dataSource:this.state.dataSource.cloneWithRows(items)
                 })
+                DeviceEventEmitter.emit('showToast','显示缓存数据')
+                if(result&&result.update_date&&!this.dataRepository.checkData(result.update_date)){
+                    return this.dataRepository.fetchNetRepository(url);
+                }
+            })
+            .then(items=>{
+                if(!items|| items.length ==0 )return
+                this.setState({
+                    dataSource:this.state.dataSource.cloneWithRows(items)
+                })
+                DeviceEventEmitter.emit('showToast','显示网络数据')
             })
             .catch(error=> {
                 console.log(error)
