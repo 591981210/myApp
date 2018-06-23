@@ -13,7 +13,7 @@ import {
     DeviceEventEmitter
 } from 'react-native'
 import NavigationBar from '../common/NavigationBar';
-import DataRepository from '../expand/dao/DataRepository';
+import DataRepository,{FLAG_STORAGE} from '../expand/dao/DataRepository';
 import RepositoryCell from '../common/RepositoryCell'
 import RepositoryDetail from './RepositoryDetail'
 
@@ -75,7 +75,7 @@ export default class PopularPage extends Component {
 class PopularTab extends Component {
     constructor(props) {
         super(props);
-        this.dataRepository = new DataRepository();
+        this.dataRepository = new DataRepository(FLAG_STORAGE.flag_popular);
         this.state = {
             dataSource: new ListView.DataSource({rowHasChanged: (r1, r2)=>r1 !== r2}),
             isLoading:false

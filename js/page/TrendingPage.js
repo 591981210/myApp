@@ -12,10 +12,11 @@ import {
     TextInput,
     View
 } from 'react-native';
-import  GitHubTrending from 'GitHubTrending'
-export default class TrendingTest extends Component {
+import DataRepository,{FLAG_STORAGE} from '../expand/dao/DataRepository'
+export default class TrendingPage extends Component {
     constructor(props) {
         super(props);
+        this.dataRepository = new DataRepository(FLAG_STORAGE.flag_trending)
         this.state = {
             data: ''
         }
@@ -26,9 +27,7 @@ export default class TrendingTest extends Component {
     }
 
     loadData(url) {
-        console.log(111)
-        console.log(url)
-        new GitHubTrending().fetchTrending(url)
+        this.dataRepository.fetchRepository(url)
             .then((data)=> {
                 this.setState({
                     data:JSON.stringify(data),
