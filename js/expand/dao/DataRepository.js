@@ -41,20 +41,16 @@ export default class DataRepository {
         return new Promise((resolve, reject) => {
             this.fetchLocalRepository(url).then((wrapData) => {
                 if (wrapData) {
-                console.log(1111)
                     resolve(wrapData, true);
                 } else {
                     this.fetchNetRepository(url).then((data) => {
-                    console.log(444)
                         resolve(data);
                     }).catch((error) => {
-                        console.log(555)
                         reject(error);
                     })
                 }
 
             }).catch((error) => {
-                console.log(333)
                 this.fetchNetRepository(url).then((data) => {
                     resolve(data);
                 }).catch((error => {
