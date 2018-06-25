@@ -192,11 +192,14 @@ class PopularTab extends Component {
 
 
     onSelect(projectModel){
+        var item = projectModel.item
         this.props.navigator.push({
-            title:projectModel.item.full_name,
+            title:item.full_name,
             component: RepositoryDetail,
             params: {
                 projectModel:projectModel,
+                parentComponent:this,
+                flag:FLAG_STORAGE.flag_popular,
                 ...this.props,
             },
         });

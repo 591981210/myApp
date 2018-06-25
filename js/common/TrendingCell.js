@@ -1,33 +1,66 @@
 /**
- * Created by penn on 2016/12/21.
+ *
+ *
+ * @flow
  */
-import React, {Component} from 'react';
+'use strict';
+
+import React, {Component} from 'react'
 import {
-    View,
+    Image,
+    Platform,
     StyleSheet,
     Text,
     TouchableOpacity,
-    Image,
+    View,
+    Alert,
 } from 'react-native'
-
 import HTMLView from 'react-native-htmlview'
-
-export default class RepositoryCell extends Component {
+export default class TrendingRepoCell extends Component {
     constructor(props) {
         super(props);
-        this.state = {}
+        this.state = {
+            isFavorite: this.props.projectModel.isFavorite,
+            favoriteIcon: this.props.projectModel.isFavorite ? require('../../res/images/ic_star.png') : require('../../res/images/ic_unstar_transparent.png'),
+        };
+    }
+
+    componentWillReceiveProps(nextProps) {//当从当前页面切换走，再切换回来后
+        this.setFavoriteState(nextProps.projectModel.isFavorite)
+    }
+
+    setFavoriteState(isFavorite) {
+        this.props.projectModel.isFavorite = isFavorite;
+        this.setState({
+            isFavorite: isFavorite,
+            favoriteIcon: isFavorite ? require('../../res/images/ic_star.png') : require('../../res/images/ic_unstar_transparent.png')
+        })
+    }
+
+    onPressFavorite() {
+        this.setFavoriteState(!this.state.isFavorite)
+        this.props.onFavorite(this.props.projectModel.item, !this.state.isFavorite)
     }
 
     render() {
-        let data = this.props.data
-        var description='<p>'+data.description+'</p>';
+        let item = this.props.projectModel.item? this.props.projectModel.item:this.props.projectModel;
+        let favoriteButton=this.props.projectModel.item?
+            <TouchableOpacity
+                style={{padding:6}}
+                onPress={()=>this.onPressFavorite()} underlayColor='transparent'>
+                <Image
+                    ref='favoriteIcon'
+                    style={[{width: 22, height: 22,},{tintColor:"#2196F3"}]}
+                    source={this.state.favoriteIcon}/>
+            </TouchableOpacity>:null;
+        var description='<p>'+item.description+'</p>';
         return (
             <TouchableOpacity
                 onPress={this.props.onSelect}
                 style={styles.container}
             >
                 <View style={styles.cell_container}>
-                    <Text style={styles.title}>{data.fullName}</Text>
+                    <Text style={styles.title}>{item.fullName}</Text>
                     <HTMLView
                         value={description}
                         onLinkPress={(url) => {
@@ -37,22 +70,22 @@ export default class RepositoryCell extends Component {
                             a:styles.description,
                         }}
                     />
-                    <Text style={styles.description}>{data.meta}</Text>
+                    <Text style={[styles.description, {fontSize: 14}]}>
+                        {item.meta}
+                    </Text>
                     <View style={styles.row}>
-                        <View style={styles.row}>
-                            <Text style={styles.author}>Build by:</Text>
-                            {data.contributors.map((result, i, arr) => {
+                        <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                            <Text style={styles.author}>Built by  </Text>
+                            {item.contributors.map((result, i, arr) => {
                                 return <Image
                                     key={i}
-                                    style={{height: 22, width: 22}}
+                                    style={{width: 22, height: 22,margin:2}}
                                     source={{uri: arr[i]}}
                                 />
-                            })}
+                            })
+                            }
                         </View>
-                        <Image
-                            style={{width: 22, height: 22}}
-                            source={require('../../res/images/ic_star.png')}
-                        />
+                        {favoriteButton}
                     </View>
 
 
@@ -88,21 +121,19 @@ const styles = StyleSheet.create({
         marginLeft: 5,
         marginRight: 5,
         marginVertical: 3,
-        //等于 margin:3 0
         borderColor: '#dddddd',
         borderWidth: 0.5,
         borderRadius: 2,
-        //IOS 阴影
         shadowColor: 'gray',
-        shadowOffset: {width: 0.5, height: 0.5},
+        shadowOffset: {width:0.5, height: 0.5},
         shadowOpacity: 0.4,
         shadowRadius: 1,
-        //安卓的阴影
-        elevation: 2
+        elevation:2
     },
-    author:{
+    author: {
         fontSize: 14,
         marginBottom: 2,
         color: '#757575'
-    }
+    },
 })
+
