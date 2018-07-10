@@ -1,34 +1,31 @@
 /**
- * Created by penn on 2016/12/14.
+ * Created by penn on 2016/12/21.
  */
 
 import React, {Component} from 'react';
 import {
-    View,
     StyleSheet,
     Text,
+    Image,
+    View,
     TextInput,
     ListView,
     RefreshControl,
     DeviceEventEmitter,
-    TouchableOpacity,
-    Image
-} from 'react-native'
-import NavigationBar from '../common/NavigationBar';
-import DataRepository,{FLAG_STORAGE} from '../expand/dao/DataRepository';
-import TrendingCell from '../common/TrendingCell'
-import RepositoryDetail from './RepositoryDetail'
-
-import LanguageDao,{FLAG_LANGUAGE} from '../expand/dao/LanguageDao'
+    TouchableOpacity
+} from 'react-native';
+import NavigationBar from '../common/NavigationBar'
+import DataRepository,{FLAG_STORAGE} from '../expand/dao/DataRepository'
+import ScrollableTabView, {ScrollableTabBar} from 'react-native-scrollable-tab-view'
+import TrendingRepoCell from '../common/TrendingRepoCell'
+import LanguageDao, {FLAG_LANGUAGE} from '../expand/dao/LanguageDao'
 import FavoriteDao from "../expand/dao/FavoriteDao"
-import ProjectModel from '../model/ProjectModel'
-
-import TimeSpan from '../model/TimeSpan'
 import Popover from '../common/Popover'
-
-import ScrollableTableView,{ScrollableTabBar} from 'react-native-scrollable-tab-view'
-import Utils from "../util/Utils";
-const API_URL = 'https://github.com/trending/';
+import ProjectModel from "../model/ProjectModel";
+import Utils from '../util/Utils'
+import ActionUtils from '../util/ActionUtils'
+import TimeSpan from '../model/TimeSpan'
+const API_URL = 'https://github.com/trending/'
 var timeSpanTextArray = [new TimeSpan('今 天', 'since=daily'),
     new TimeSpan('本 周', 'since=weekly'), new TimeSpan('本 月', 'since=monthly')]
 var favoriteDao = new FavoriteDao(FLAG_STORAGE.flag_trending)
@@ -36,31 +33,30 @@ var dataRepository = new DataRepository(FLAG_STORAGE.flag_trending);
 export default class TrendingPage extends Component {
     constructor(props) {
         super(props);
-        this.languageDao =  new LanguageDao(FLAG_LANGUAGE.flag_language)
+        this.languageDao = new LanguageDao(FLAG_LANGUAGE.flag_language);
         this.state = {
-            languages:[],
+            languages: [],
             isVisible: false,
             buttonRect: {},
             timeSpan: timeSpanTextArray[0],
         }
+        this.loadLanguage();
     }
 
-    componentDidMount(){
-        this.loadData()
+    componentDidMount() {
     }
 
-    loadData() {
-        this.languageDao.fetch()
-            .then(res => {
+    loadLanguage() {
+        this.languageDao.fetch().then((languages)=> {
+            if (languages) {
                 this.setState({
-                    languages: res
-                })
-            })
-            .catch(error => {
-                console.log(error)
-            })
-    }
+                    languages: languages,
+                });
+            }
+        }).catch((error)=> {
 
+        });
+    }
     showPopover() {
         this.refs.button.measure((ox, oy, width, height, px, py) => {
             this.setState({
@@ -72,6 +68,14 @@ export default class TrendingPage extends Component {
     closePopover() {
         this.setState({isVisible: false});
     }
+
+    onSelectTimeSpan(timeSpan) {
+        this.closePopover();
+        this.setState({
+            timeSpan: timeSpan
+        })
+    }
+
     renderTitleView() {
         return <View >
             <TouchableOpacity
@@ -93,13 +97,6 @@ export default class TrendingPage extends Component {
         </View>
     }
 
-    onSelectTimeSpan(timeSpan) {
-        this.closePopover();
-        this.setState({
-            timeSpan: timeSpan
-        })
-    }
-
     render() {
         let navigationBar =
             <NavigationBar
@@ -117,7 +114,7 @@ export default class TrendingPage extends Component {
                 <View style={{alignItems: 'center'}}>
                     {timeSpanTextArray.map((result, i, arr) => {
                         return <TouchableOpacity key={i} onPress={()=>this.onSelectTimeSpan(arr[i])}
-                                                 underlayColor='transparent'>
+                                                   underlayColor='transparent'>
                             <Text
                                 style={{fontSize: 18,color:'white', padding: 8, fontWeight: '400'}}>
                                 {arr[i].showText}
@@ -127,37 +124,88 @@ export default class TrendingPage extends Component {
                     }
                 </View>
             </Popover>
-        let content = this.state.languages.length>0?
-            <ScrollableTableView
-                renderTabBar={()=><ScrollableTabBar/>}
+        let content = this.state.languages.length > 0 ?
+            <ScrollableTabView
+                tabBarUnderlineStyle={{backgroundColor: '#e7e7e7', height: 2}}
+                tabBarInactiveTextColor='mintcream'
+                tabBarActiveTextColor='white'
+                ref="scrollableTabView"
+                tabBarBackgroundColor="#2196F3"
+                initialPage={0}
+                renderTabBar={() => <ScrollableTabBar style={{height: 40, borderWidth: 0, elevation: 2}}
+                                                      tabStyle={{height: 39}}/>}
             >
-                {this.state.languages.map((result,i,arr)=>{
-                    let language = arr[i]
-                    return language.checked?
-                        <TrendingTab key={i} tabLabel={language.name} timeSpan={this.state.timeSpan} {...this.props}/> : null;
+                {this.state.languages.map((reuslt, i, arr)=> {
+                    let language = arr[i];
+                    return language.checked ? <TrendingTab key={i} tabLabel={language.name} timeSpan={this.state.timeSpan} {...this.props}/> : null;
                 })}
-            </ScrollableTableView>:null
-        return (
-            <View style={styles.container}>
-                {navigationBar}
-                {content}
-                {timeSpanView}
-            </View>
-        )
+            </ScrollableTabView> : null;
+        return <View style={styles.container}>
+            {navigationBar}
+            {content}
+            {timeSpanView}
+        </View>
     }
 }
 class TrendingTab extends Component {
     constructor(props) {
         super(props);
+        this.isRender = true;
+        this.isFavoriteChanged=false;
         this.state = {
             dataSource: new ListView.DataSource({rowHasChanged: (r1, r2)=>r1 !== r2}),
-            isLoading:false,
+            isLoading: false,
             favoriteKeys: [],
         }
     }
 
+    componentDidMount() {
+        this.listener = DeviceEventEmitter.addListener('favoriteChanged_trending', () => {
+            this.isFavoriteChanged=true;
+        });
+        this.loadData(this.props.timeSpan);
+    }
+    componentWillUnmount(){
+        if (this.listener) {
+            this.listener.remove();
+        }
+    }
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.timeSpan !== this.props.timeSpan) {
+            this.loadData(nextProps.timeSpan);
+        }else if(this.isFavoriteChanged){
+            this.isFavoriteChanged=false;
+            this.getFavoriteKeys();
+        }
+    }
+    onUpdateFavorite() {
+        this.getFavoriteKeys();
+    }
+    shouldComponentUpdate(nextProps, nextState) {
+        if (this.isRender) {
+            this.isRender = false;
+            return true;
+        } else {
+            return false;
+        }
+    }
     onRefresh(){
         this.loadData(this.props.timeSpan,true);
+    }
+    /**
+     * 更新ProjectItem的Favorite状态
+     */
+    flushFavoriteState() {
+        let projectModels = [];
+        let items = this.items;
+        for (var i = 0, len = items.length; i < len; i++) {
+            projectModels.push(new ProjectModel(items[i], Utils.checkFavorite(items[i],this.state.favoriteKeys)));
+        }
+        this.updateState({
+            isLoading: false,
+            isLoadingFail: false,
+            dataSource: this.getDataSource(projectModels),
+        });
     }
 
     /**
@@ -174,65 +222,43 @@ class TrendingTab extends Component {
             console.log(error);
         });
     }
-    /**
-     * 更新ProjectItem的Favorite状态
-     */
-    flushFavoriteState() {
-        let projectModels = [];
-        let items = this.items;
-        for (var i = 0, len = items.length; i < len; i++) {
-            // Utils.checkFavorite(items[i],this.state.favoriteKeys)
-            projectModels.push(new ProjectModel(items[i], Utils.checkFavorite(items[i],this.state.favoriteKeys)));
-
-        }
-        this.updateState({
-            isLoading: false,
-            isLoadingFail: false,
-            dataSource: this.getDataSource(projectModels),
-        });
-    }
-
-    componentDidMount() {
-        this.loadData(this.props.timeSpan,true);
-    }
-
     updateState(dic) {
         if (!this)return;
         this.setState(dic);
     }
-
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.timeSpan !== this.props.timeSpan) {
-            this.loadData(nextProps.timeSpan);
-        }
-    }
-
     loadData(timeSpan,isRefresh) {
         this.updateState({
             isLoading: true
         })
         let url=this.genFetchUrl(timeSpan,this.props.tabLabel);
-        //先读缓存,再读接口
         dataRepository
             .fetchRepository(url)
             .then(result=> {
-                this.items = result && result.items?result.items:result?result:[]
-                this.getFavoriteKeys()
-                if(result&&result.update_date&&!dataRepository.checkData(result.update_date)){
+                this.items=result && result.items ? result.items : result ? result : [];
+                this.getFavoriteKeys();
+                if(!this.items||isRefresh&&result && result.update_date && !Utils.checkDate(result.update_date)){
                     return dataRepository.fetchNetRepository(url);
                 }
             })
-            .then(items=>{
-                if(!items|| items.length ==0 )return
-                this.items = items
-                this.getFavoriteKeys()
+            .then((items)=> {
+                if (!items || items.length === 0)return;
+                this.items = items;
+                this.getFavoriteKeys();
             })
             .catch(error=> {
-                console.log(error)
+                console.log(error);
                 this.updateState({
                     isLoading: false
                 });
             })
+    }
+    getDataSource(items) {
+        return this.state.dataSource.cloneWithRows(items);
+    }
+    updateState(dic){
+        if (!this)return;
+        this.isRender=true;
+        this.setState(dic);
     }
     /**
      * favoriteIcon单击回调函数
@@ -250,30 +276,17 @@ class TrendingTab extends Component {
         return API_URL + category + '?' + timeSpan.searchText;
     }
 
-    getDataSource(items) {
-        return this.state.dataSource.cloneWithRows(items);
-    }
-    onSelect(projectModel){
-        var item = projectModel.item
-        this.props.navigator.push({
-            title:item.fullName,
-            component: RepositoryDetail,
-            params: {
-                projectModel:projectModel,
-                parentComponent:this,
-                flag:FLAG_STORAGE.flag_trending,
-                ...this.props,
-            },
-        });
-    }
-
-
     renderRow(projectModel) {
-        return <TrendingCell
-            key={projectModel.item.id}
-            projectModel={projectModel}
-            onSelect={()=>this.onSelect(projectModel)}
-            onFavorite={(item, isFavorite)=>this.onFavorite(item, isFavorite)}/>
+        return <TrendingRepoCell
+                key={projectModel.item.id}
+                projectModel={projectModel}
+                onSelect={()=>ActionUtils.onSelectRepository({
+                    projectModel:projectModel,
+                    flag:FLAG_STORAGE.flag_trending,
+                    onUpdateFavorite:()=>this.onUpdateFavorite(),
+                    ...this.props
+                })}
+                onFavorite={(item, isFavorite)=>this.onFavorite(item, isFavorite)}/>
     }
 
     render() {
@@ -281,6 +294,7 @@ class TrendingTab extends Component {
             <ListView
                 dataSource={this.state.dataSource}
                 renderRow={(data)=>this.renderRow(data)}
+                enableEmptySections={true}
                 refreshControl={
                     <RefreshControl
                         title='Loading...'
@@ -301,6 +315,6 @@ const styles = StyleSheet.create({
 
     },
     tips: {
-        fontSize: 29
+        fontSize: 20
     }
 })

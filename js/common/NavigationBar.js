@@ -7,6 +7,8 @@ import React, {Component, PropTypes} from 'react';
 import {
     StyleSheet,
     Platform,
+    TouchableOpacity,
+    Image,
     StatusBar,
     Text,
     View

@@ -1,5 +1,7 @@
 import React, {Component} from 'react'
-import {Navigator} from 'react-native-deprecated-custom-components'
+import {
+    Navigator
+} from 'react-native-deprecated-custom-components'
 
 import WelcomePage from './WelcomePage'
 function setup() {

@@ -8,7 +8,6 @@ import React, {Component} from 'react';
 import {
     StyleSheet,
     Text,
-    Navigator,
     Image,
     View,
     DeviceEventEmitter
