@@ -19,22 +19,56 @@ import TrendingPage from './TrendingPage'
 import FavoritePage from './FavoritePage'
 import MyPage from './my/MyPage'
 import Toast,{DURATION} from 'react-native-easy-toast'
+export const ACTION_HOME={A_SHOW_TOAST:'showToast',A_RESTART:'restart'};
+export const FLAG_TAB={
+    flag_popularTab:'tb_popular',
+    flag_trendingTab:'tb_trending',
+    flag_favoriteTab:'tb_favorite',
+    flag_my:'tb_my'
+}
 export default class HomePage extends Component {
     constructor(props) {
         super(props);
+        let selectedTab=this.props.selectedTab?this.props.selectedTab:'tb_popular';
         this.state = {
-            selectedTab: 'tb_popular',
+            selectedTab: selectedTab,
         }
     }
     componentDidMount(){
-        this.listener = DeviceEventEmitter.addListener('showToast', (text) => {
-            this.toast.show(text, DURATION.LENGTH_LONG);
-        });
+        this.listener = DeviceEventEmitter.addListener('ACTION_HOME',
+            (action,params) => this.onAction(action,params));
+    }
+
+    /**
+     * 通知回调事件处理
+     * @param action
+     * @param params
+     */
+    onAction(action,params){
+        if(ACTION_HOME.A_RESTART===action){
+            this.onRestart(params)
+        }else if(ACTION_HOME.A_SHOW_TOAST===action){
+            this.toast.show(params.text,DURATION.LENGTH_LONG);
+        }
     }
     componentWillUnmount(){
         if (this.listener) {
             this.listener.remove();
         }
+    }
+
+    /**
+     * 重启首页
+     * @param jumpToTab 默认显示的页面
+     */
+    onRestart(jumpToTab){
+        this.props.navigator.resetTo({
+            component:HomePage,
+            params:{
+                ...this.props,
+                selectedTab:jumpToTab
+            }
+        })
     }
     _renderTab(Component, selectedTab, title, renderIcon) {
         return (

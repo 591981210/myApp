@@ -21,10 +21,10 @@ import {
 } from 'react-native';
 import {MORE_MENU} from '../../common/MoreMenu'
 import WebViewPage from '../../page/WebViewPage'
+import AboutMePage from './AboutMePage'
 import GlobalStyles from '../../../res/styles/GlobalStyles'
 import ViewUtils from '../../util/ViewUtils'
 import AboutCommon,{FLAG_ABOUT}from './AboutCommon'
-import AboutMePage from './AboutMePage'
 import config from '../../../res/data/config.json'
 
 export default class AboutPage extends Component{
@@ -46,7 +46,7 @@ export default class AboutPage extends Component{
         let TargetComponent, params = {...this.props,menuType:tab};
         switch (tab) {
             case MORE_MENU.About_Author:
-                TargetComponent = AboutMePage;
+                TargetComponent=AboutMePage;
                 break;
             case MORE_MENU.Website:
                 TargetComponent = WebViewPage;
@@ -87,8 +87,8 @@ export default class AboutPage extends Component{
         return this.aboutCommon.render(content, {
             'name': 'GitHub Popular',
             'description': '这是一个用来查看GitHub最受欢迎与最热项目的App,它基于React Native支持Android和iOS双平台。',
-            'avatar':'http://avatar.csdn.net/1/1/E/1_fengyuzhengfan.jpg',
-            'backgroundImg':'http://www.devio.org/io/GitHubPopular/img/for_githubpopular_about_me.jpg',
+            'avatar':this.state.author.avatar1,
+            'backgroundImg':this.state.author.backgroundImg1,
         });
     }
 }

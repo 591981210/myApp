@@ -21,11 +21,12 @@ import {
 import ParallaxScrollView from 'react-native-parallax-scroll-view';
 import RepositoryCell from '../../common/RepositoryCell';
 import GlobalStyles from '../../../res/styles/GlobalStyles'
+import RepositoryDetail from '../../page/RepositoryDetail';
 import FavoriteDao from '../../expand/dao/FavoriteDao'
 import Utils from '../../util/Utils'
+import ActionUtils from '../../util/ActionUtils'
 import {FLAG_STORAGE} from '../../expand/dao/DataRepository'
 import ViewUtils from '../../util/ViewUtils'
-import ActionUtils from '../../util/ActionUtils'
 import RepositoryUtils from '../../expand/dao/RepositoryUtils'
 export var FLAG_ABOUT = {flag_about: 'about', flag_about_me: 'about_me'}
 
@@ -38,7 +39,7 @@ export default class AboutCommon {
         this.favoriteDao = new FavoriteDao(FLAG_STORAGE.flag_popular);
         this.repositories = [];
         this.repositoryUtils = new RepositoryUtils(this);
-        this.favoriteKeys = null;
+        this.favoriteKeys=null;
     }
 
     componentDidMount() {
@@ -46,9 +47,9 @@ export default class AboutCommon {
             this.repositoryUtils.fetchRepository(this.config.info.currentRepoUrl);
         } else {
             var urls = [];
-            var items = this.config.items;
-            for (let i = 0, l = items.length; i < l; i++) {
-                urls.push(this.config.info.url + items[i]);
+            var items=this.config.items;
+            for (let i = 0, l =items.length; i < l; i++) {
+                urls.push(this.config.info.url+items[i]);
             }
             this.repositoryUtils.fetchRepositories(urls);
         }
@@ -69,29 +70,21 @@ export default class AboutCommon {
     async updateFavorite(repositories) {
         if (repositories)this.repositories = repositories;
         if (!this.repositories)return;
-        if (!this.favoriteKeys) {
+        if(!this.favoriteKeys){
             this.favoriteKeys = await this.favoriteDao.getFavoriteKeys();
         }
         let projectModels = [];
         for (let i = 0, l = this.repositories.length; i < l; i++) {
-            var data = this.repositories[i];
-            var item=data.item ? data.item : data;
+            var data=this.repositories[i];
+            var item=data.item?data.item:data;
             projectModels.push({
-                isFavorite: Utils.checkFavorite(item, this.favoriteKeys ? this.favoriteKeys : []),
-                item:item,
+                isFavorite: Utils.checkFavorite(item, this.favoriteKeys?this.favoriteKeys:[]),
+                item: item,
             })
         }
         this.updateState({
             projectModels: projectModels,
         })
-    }
-
-    onFavorite(item, isFavorite) {
-        if (isFavorite) {
-            this.favoriteDao.saveFavoriteItem(item.id.toString(), JSON.stringify(item));
-        } else {
-            this.favoriteDao.removeFavoriteItem(item.id.toString());
-        }
     }
 
     /**
@@ -108,13 +101,12 @@ export default class AboutCommon {
                 <RepositoryCell
                     key={projectModel.item.id}
                     onSelect={()=>ActionUtils.onSelectRepository({
-                        projectModel: projectModel,
-                        parentComponent: this,
+                        projectModel:projectModel,
                         ...this.props,
-                        flag: FLAG_STORAGE.flag_popular,
+                        flag:FLAG_STORAGE.flag_popular
                     })}
                     projectModel={projectModel}
-                    onFavorite={(item, isFavorite)=>this.onFavorite(item, isFavorite)}/>
+                    onFavorite={(item, isFavorite)=>ActionUtils.onFavorite(this.favoriteDao,item, isFavorite,FLAG_STORAGE.flag_popular)}/>
             );
         }
         return views;

@@ -14,13 +14,14 @@ import {
     DeviceEventEmitter
 } from 'react-native';
 import NavigationBar from '../common/NavigationBar'
+import ActionUtils from '../util/ActionUtils'
 import {FLAG_STORAGE} from '../expand/dao/DataRepository'
 import ScrollableTabView, {ScrollableTabBar} from 'react-native-scrollable-tab-view'
 import RepositoryCell from '../common/RepositoryCell'
 import TrendingRepoCell from '../common/TrendingRepoCell'
+import RepositoryDetail from './RepositoryDetail'
 import FavoriteDao from '../expand/dao/FavoriteDao'
 import ProjectModel from '../model/ProjectModel'
-import ActionUtils from '../util/ActionUtils'
 import ArrayUtils from '../util/ArrayUtils'
 export default class FavoritePage extends Component {
     constructor(props) {
@@ -102,13 +103,22 @@ class FavoriteTab extends Component {
     getDataSource(items) {
         return this.state.dataSource.cloneWithRows(items);
     }
+
+    onSelectRepository(projectModel) {
+        var belongNavigator = this.props.navigator ? this.props.navigator : this.props.homeComponent.refs.navFavorite;
+        var item = projectModel.item;
+        belongNavigator.push({
+            title: item.full_name,
+            component: RepositoryDetail,
+            params: {
+                projectModel: projectModel,
+                flag: this.props.flag,
+                ...this.props
+            },
+        });
+    }
+
     onFavorite(item, isFavorite) {
-        var key = this.props.flag === FLAG_STORAGE.flag_popular ? item.id.toString() : item.fullName;
-        if (isFavorite) {
-            this.favoriteDao.saveFavoriteItem(key, JSON.stringify(item));
-        } else {
-            this.favoriteDao.removeFavoriteItem(key);
-        }
         ArrayUtils.updateArray(this.unFavoriteItems, item);
         if(this.unFavoriteItems.length>0){
             if (this.props.flag===FLAG_STORAGE.flag_popular){
@@ -125,11 +135,10 @@ class FavoriteTab extends Component {
         return (
             <CellComponent
                 key={this.props.flag === FLAG_STORAGE.flag_popular ? projectModel.item.id : projectModel.item.fullName}
-                onFavorite={(item, isFavorite)=>this.onFavorite(item, isFavorite)}
+                onFavorite={(item, isFavorite)=>ActionUtils.onFavorite(this.favoriteDao,item, isFavorite,this.props.flag)}
                 isFavorite={true}
                 {...{navigator}}
                 onSelect={()=>ActionUtils.onSelectRepository({
-                    projectModel:projectModel,
                     projectModel: projectModel,
                     flag: this.props.flag,
                     ...this.props
